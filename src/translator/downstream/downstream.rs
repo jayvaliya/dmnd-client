@@ -493,10 +493,8 @@ impl IsServer<'static> for Downstream {
                     }
                 });
             } else {
-                // TODO test that proxy do not fail when it happen but only close downstream
-                // connection
                 error!("Downstream is expected to carry a token");
-                ProxyState::update_downstream_state(DownstreamType::TranslatorDownstream);
+                return false;
             }
 
             let token = self.token.safe_lock(|t| t.clone()).unwrap_or_else(|e| {
