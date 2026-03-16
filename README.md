@@ -58,7 +58,7 @@ The default Template Provider port is **8336**.
 
 #### 4.1 Download DMND Stratum V2 Client
 You can download the latest release of DMND Stratum V2 Client from:
-https://github.com/dmnd-pool/dmnd-client/releases/tag/v0.2.7
+https://github.com/dmnd-pool/dmnd-client/releases/tag/v0.2.8
 
 
 Assuming that `dmnd-client-linux` is the executable you are using, run:
@@ -85,8 +85,7 @@ Example:
 After you have Bitcoin Core, Stratum V2 Template Provider and DMND Stratum V2 Client running, you
 can point your miner to the DMND Stratum V2 Client.
 
-Leave the username and password fields empty in your miner configuration. And you should point the
-miners to the machine running the DMND Stratum V2 Client. If not changed, the default port of the
+Enter your DMND token in the password field and point your miners to the machine running the DMND Stratum V2 Client. The username field can be left empty or filled with anything you like. If not changed, the default port of the
 DMND Stratum V2 Client is **32767**. So you should obtain the IP address of the machine running the
 DMND Stratum V2 Client and point your miner to:
 
