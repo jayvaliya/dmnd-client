@@ -252,13 +252,13 @@ impl Configuration {
             .token
             .or(config.token)
             .or_else(|| std::env::var("TOKEN").ok());
-        println!("User Token: {:?}", token);
+        println!("User Token: {token:?}");
 
         let signature = match args.signature {
             Some(s) => {
                 if s.len() == 2 {
-                    println!("Signature provided: DDx{}", s);
-                    format!("DDx{}", s)
+                    println!("Signature provided: DDx{s}");
+                    format!("DDx{s}")
                 } else {
                     println!("Invalid signature provided, using DDxDD");
                     "DDxDD".to_string()
@@ -408,16 +408,14 @@ fn parse_hashrate(hashrate_str: &str) -> Result<f32, String> {
 
     let num: f32 = num.parse().map_err(|_| {
         format!(
-            "Invalid number '{}'. Expected format: '<number><unit>' (e.g., '10T', '2.5P', '5E')",
-            num
+            "Invalid number '{num}'. Expected format: '<number><unit>' (e.g., '10T', '2.5P', '5E')"
         )
     })?;
 
     let multiplier = HashUnit::from_str(&unit)
         .map(|unit| unit.multiplier())
         .ok_or_else(|| format!(
-            "Invalid unit '{}'. Expected 'T' (Terahash), 'P' (Petahash), or 'E' (Exahash). Example: '10T', '2.5P', '5E'",
-            unit
+            "Invalid unit '{unit}'. Expected 'T' (Terahash), 'P' (Petahash), or 'E' (Exahash). Example: '10T', '2.5P', '5E'"
         ))?;
 
     let hashrate = num * multiplier;
@@ -460,7 +458,7 @@ async fn fetch_pool_urls() -> Result<Vec<SocketAddr>, Error> {
     } else {
         PRODUCTION_URL
     };
-    let endpoint = format!("{}/api/pool/urls", url);
+    let endpoint = format!("{url}/api/pool/urls");
     info!("Fetching pool URLs from: {}", endpoint);
     let token = Configuration::token().expect("TOKEN is not set");
     let mut retries = 8;
@@ -549,7 +547,7 @@ impl HashUnit {
         } else if hashrate >= 1e12 {
             format!("{:.2}T", hashrate / 1e12)
         } else {
-            format!("{:.2}", hashrate)
+            format!("{hashrate:.2}")
         }
     }
 }

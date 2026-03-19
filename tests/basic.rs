@@ -11,6 +11,7 @@ use tokio::{
 
 const DEFAULT_LISTEN_ADDRESS: &str = dmnd_client::DEFAULT_LISTEN_ADDRESS;
 const MAX_LEN_DOWN_MSG: u32 = 10_000;
+type DownstreamConnection = (Sender<String>, Receiver<String>, std::net::IpAddr);
 
 mod config {
     use super::{Mutex, OnceLock};
@@ -104,8 +105,8 @@ async fn basic() {
     config::set_downstream_listening_addr(listening_addr.clone());
 
     let (downstreams_tx, _downstreams_rx): (
-        Sender<(Sender<String>, Receiver<String>, std::net::IpAddr)>,
-        Receiver<(Sender<String>, Receiver<String>, std::net::IpAddr)>,
+        Sender<DownstreamConnection>,
+        Receiver<DownstreamConnection>,
     ) = tokio::sync::mpsc::channel(1);
 
     let ingress = sv1_ingress::start_listen_for_downstream(downstreams_tx);

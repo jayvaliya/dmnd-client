@@ -258,7 +258,7 @@ pub fn get_mining_setup_connection_msg(work_selection: bool) -> SetupConnection<
     };
     let token = Configuration::token().expect("Checked at initialization");
     let device_id = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
-    let device_id = format!("{}::POOLED::{}", device_id, token)
+    let device_id = format!("{device_id}::POOLED::{token}")
         .to_string()
         .try_into()
         .expect("Internal error: this operation can not fail because an device_id can always be converted into Inner");

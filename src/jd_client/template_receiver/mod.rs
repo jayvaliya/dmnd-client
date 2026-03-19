@@ -22,9 +22,7 @@ use roles_logic_sv2::{
 use setup_connection::SetupConnectionHandler;
 use std::{convert::TryInto, net::SocketAddr, sync::Arc};
 use task_manager::TaskManager;
-use tokio::{
-    sync::mpsc::{Receiver as TReceiver, Sender as TSender},
-};
+use tokio::sync::mpsc::{Receiver as TReceiver, Sender as TSender};
 use tracing::{error, info, warn};
 
 mod message_handler;
@@ -650,9 +648,8 @@ mod tests {
     use std::convert::TryInto;
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Arc;
-    use std::time::Duration;
     use tokio::sync::{mpsc, oneshot};
-    use tokio::time::{timeout, Duration};
+    use tokio::time::Duration;
 
     fn make_new_template(template_id: u64, future_template: bool) -> NewTemplate<'static> {
         let coinbase_prefix: B0255<'static> = Vec::new()

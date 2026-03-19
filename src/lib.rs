@@ -87,8 +87,7 @@ pub async fn start() {
 
     let console_layer =
         tracing_subscriber::fmt::layer().with_filter(tracing_subscriber::EnvFilter::new(format!(
-            "{},demand_sv2_connection::noise_connection_tokio={}",
-            log_level, noise_connection_log_level
+            "{log_level},demand_sv2_connection::noise_connection_tokio={noise_connection_log_level}"
         )));
 
     if enable_file_logging {
@@ -99,8 +98,7 @@ pub async fn start() {
             .with_writer(non_blocking)
             .with_ansi(false) // file logs should not contain color codes
             .with_filter(tracing_subscriber::EnvFilter::new(format!(
-                "{},demand_sv2_connection::noise_connection_tokio={}",
-                log_level, noise_connection_log_level
+                "{log_level},demand_sv2_connection::noise_connection_tokio={noise_connection_log_level}"
             )));
         tracing_subscriber::registry()
             .with(console_layer)
