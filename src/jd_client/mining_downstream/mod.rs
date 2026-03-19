@@ -166,7 +166,7 @@ impl DownstreamMiningNode {
         let main_task = task::spawn(async move {
             while let Some(message) = receiver.recv().await {
                 if let Err(e) = DownstreamMiningNode::next(&self_mutex, message).await {
-                    error!("Jd error can not receive message from downstream: {e:?}");
+                    error!("Jd error: {e:?}");
                     ProxyState::update_downstream_state(DownstreamType::JdClientMiningDownstream);
                 };
             }
@@ -457,6 +457,18 @@ impl DownstreamMiningNode {
             .map_err(|_| Error::DownstreamDown)?; // Caller will restart proxy
         Ok(())
     }
+
+    pub async fn wait_for_upstream_job(
+        self_mutex: &Arc<Mutex<Self>>,
+        template_id: u64,
+    ) -> Result<(), JdClientError> {
+        let upstream = self_mutex
+            .safe_lock(|s| s.status.get_upstream())
+            .map_err(|_| JdClientError::JdClientDownstreamMutexCorrupted)?
+            .ok_or(JdClientError::RolesSv2Logic(Error::NoUpstreamsConnected))?;
+        UpstreamMiningNode::get_job_id(&upstream, template_id).await?;
+        Ok(())
+    }
 }
 
 use roles_logic_sv2::selectors::NullDownstreamMiningSelector;
@@ -482,7 +494,7 @@ impl
     }
 
     fn is_work_selection_enabled(&self) -> bool {
-        false
+        true
     }
 
     fn handle_open_standard_mining_channel(

@@ -22,7 +22,9 @@ use roles_logic_sv2::{
 use setup_connection::SetupConnectionHandler;
 use std::{convert::TryInto, net::SocketAddr, sync::Arc};
 use task_manager::TaskManager;
-use tokio::sync::mpsc::{Receiver as TReceiver, Sender as TSender};
+use tokio::{
+    sync::mpsc::{Receiver as TReceiver, Sender as TSender},
+};
 use tracing::{error, info, warn};
 
 mod message_handler;
@@ -303,7 +305,7 @@ impl TemplateRx {
                             match m {
                                 // Send the new template along with the token to the JD so that JD can
                                 // declare the mining job
-                                Some(TemplateDistribution::NewTemplate(m)) => {
+                                Some(TemplateDistribution::NewTemplate(mut m)) => {
                                     let can_process_template = super::IS_NEW_TEMPLATE_HANDLED
                                         .load(std::sync::atomic::Ordering::Acquire)
                                         && pending_tx_data_template_id.is_none();
@@ -311,6 +313,15 @@ impl TemplateRx {
                                         pending_new_template = Some(m);
                                         continue;
                                     }
+                                    if let Some(miner_name) =
+                                        crate::config::Configuration::miner_name()
+                                    {
+                                        assert!(miner_name.len() < 75);
+                                        crate::shared::miner_tag::tag_new_template(
+                                            &mut m,
+                                            miner_name.as_str(),
+                                        );
+                                    };
                                     let new_phash = super::IS_NEW_PHASH_ARRIVED
                                         .load(std::sync::atomic::Ordering::Acquire);
                                     let last_is_future = match self_mutex
@@ -349,7 +360,7 @@ impl TemplateRx {
                                         !last_is_future && !wait_for_last_template_to_be_completed;
 
                                     if wait_for_last_template_to_be_completed {
-                                        println!("wait_for_last_template_to_be_completed");
+                                        info!("wait_for_last_template_to_be_completed");
                                         if new_phash {
                                             super::IS_NEW_PHASH_ARRIVED
                                                 .store(false, std::sync::atomic::Ordering::Release);
@@ -641,6 +652,7 @@ mod tests {
     use std::sync::Arc;
     use std::time::Duration;
     use tokio::sync::{mpsc, oneshot};
+    use tokio::time::{timeout, Duration};
 
     fn make_new_template(template_id: u64, future_template: bool) -> NewTemplate<'static> {
         let coinbase_prefix: B0255<'static> = Vec::new()

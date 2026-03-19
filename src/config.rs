@@ -10,7 +10,11 @@ use std::{
 use tracing::{debug, error, info};
 
 use crate::{
-    shared::error::Error, DEFAULT_SV1_HASHPOWER, PRODUCTION_URL, STAGING_URL, TESTNET3_URL,
+    shared::{
+        error::Error,
+        miner_tag::{format_miner_tag, validate_miner_name},
+    },
+    DEFAULT_SV1_HASHPOWER, PRODUCTION_URL, STAGING_URL, TESTNET3_URL,
 };
 lazy_static! {
     pub static ref CONFIG: Configuration = Configuration::load_config();
@@ -53,6 +57,8 @@ struct Args {
     auto_update: bool,
     #[clap(long)]
     signature: Option<String>,
+    #[clap(long)]
+    miner_name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -72,6 +78,7 @@ struct ConfigFile {
     api_server_port: Option<String>,
     monitor: Option<bool>,
     auto_update: Option<bool>,
+    miner_name: Option<String>,
 }
 
 impl ConfigFile {
@@ -92,6 +99,7 @@ impl ConfigFile {
             api_server_port: None,
             monitor: None,
             auto_update: None,
+            miner_name: None,
         }
     }
 }
@@ -114,6 +122,7 @@ pub struct Configuration {
     monitor: bool,
     auto_update: bool,
     signature: String,
+    miner_name: Option<String>,
 }
 impl Configuration {
     pub fn token() -> Option<String> {
@@ -226,6 +235,10 @@ impl Configuration {
         CONFIG.signature.clone()
     }
 
+    pub fn miner_name() -> Option<String> {
+        CONFIG.miner_name.clone()
+    }
+
     // Loads config from CLI, file, or env vars with precedence: CLI > file > env.
     fn load_config() -> Self {
         let args = Args::parse();
@@ -261,6 +274,18 @@ impl Configuration {
             .tp_address
             .or(config.tp_address)
             .or_else(|| std::env::var("TP_ADDRESS").ok());
+
+        let miner_name = args
+            .miner_name
+            .or(config.miner_name)
+            .or_else(|| std::env::var("MINER_NAME").ok());
+        if let Some(ref miner_name) = miner_name {
+            validate_miner_name(miner_name).unwrap_or_else(|e| panic!("{e}"));
+        }
+        println!(
+            "Using miner tag: {}",
+            format_miner_tag(miner_name.as_deref())
+        );
 
         let interval = args
             .adjustment_interval
@@ -365,6 +390,7 @@ impl Configuration {
             monitor,
             auto_update,
             signature,
+            miner_name,
         }
     }
 }
