@@ -457,18 +457,6 @@ impl DownstreamMiningNode {
             .map_err(|_| Error::DownstreamDown)?; // Caller will restart proxy
         Ok(())
     }
-
-    pub async fn wait_for_upstream_job(
-        self_mutex: &Arc<Mutex<Self>>,
-        template_id: u64,
-    ) -> Result<(), JdClientError> {
-        let upstream = self_mutex
-            .safe_lock(|s| s.status.get_upstream())
-            .map_err(|_| JdClientError::JdClientDownstreamMutexCorrupted)?
-            .ok_or(JdClientError::RolesSv2Logic(Error::NoUpstreamsConnected))?;
-        UpstreamMiningNode::get_job_id(&upstream, template_id).await?;
-        Ok(())
-    }
 }
 
 use roles_logic_sv2::selectors::NullDownstreamMiningSelector;
