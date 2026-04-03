@@ -1,6 +1,8 @@
 name: Upload to ECR
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   upload-to-ecr:
@@ -29,3 +31,4 @@ jobs:
           work-dir: deployment/ecrImage/
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          VERSION: ${{ github.ref_name }}
