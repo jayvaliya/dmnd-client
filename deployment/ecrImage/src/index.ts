@@ -1,14 +1,15 @@
-import * as pulumi from '@pulumi/pulumi';
-
 import { ImageManagement } from './image';
 
-const config = new pulumi.Config();
+const version = process.env.VERSION;
+if (!version) {
+    throw new Error('VERSION environment variable is not set. Please set it to the desired release tag.');
+}
 
 const image = new ImageManagement('dmnd-client-image', {
   appName: 'client',
   dockerContext: '../../',
   dockerfile: '../../Dockerfile',
-  imageTag: config.require('version'),
+  imageTag: version,
 });
 
 export { image };
