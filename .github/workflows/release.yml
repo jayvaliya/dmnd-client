@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux:
+    name: Build Linux Binary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Linux Binary
+        run: cargo build --release
+
+      - name: Rename Linux Binary
+        run: mv target/release/dmnd-client dmnd-client-linux
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifact
+          path: dmnd-client-linux
+
+  build-macos:
+    name: Build macOS Binary
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build macOS Binary
+        run: cargo build --release
+
+      - name: Rename macOS Binary
+        run: mv target/release/dmnd-client dmnd-client-macos
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifact
+          path: dmnd-client-macos
+
+  build-windows:
+    name: Build Windows Binary
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Windows Binary
+        run: cargo build --release
+
+      - name: Rename Windows Binary
+        run: move target\release\dmnd-client.exe dmnd-client-windows.exe
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifact
+          path: dmnd-client-windows.exe
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-linux, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Linux Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-artifact
+          path: .
+
+      - name: Download macOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-artifact
+          path: .
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifact
+          path: .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            dmnd-client-linux
+            dmnd-client-macos
+            dmnd-client-windows.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-to-ecr:
+    name: Upload Docker Image to ECR
+    needs: [create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Install Node.js dependencies for Pulumi project
+        run: npm install
+        working-directory: deployment/ecrImage/
+
+      - name: Run Pulumi Up
+        uses: pulumi/actions@v6
+        with:
+          command: up
+          stack-name: dmnd-tech-org/image/client
+          work-dir: deployment/ecrImage/
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          VERSION: ${{ github.ref_name }}
