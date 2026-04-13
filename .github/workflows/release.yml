@@ -6,8 +6,31 @@ on:
       - 'v*'
 
 jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read version from Cargo.toml
+        id: cargo_version
+        uses: SebRollen/toml-action@v1.2.0
+        with:
+          file: Cargo.toml
+          field: package.version
+
+      - name: Fail if tag does not match Cargo.toml version
+        run: |
+          expected="v${{ steps.cargo_version.outputs.value }}"
+          actual="${{ github.ref_name }}"
+          [ "$expected" = "$actual" ] || {
+            echo "Version mismatch: release tag '$actual' does not match cargo.toml version '$expected'."
+            exit 1
+          }
+
   build-linux:
     name: Build Linux Binary
+    needs: [version-check]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -30,6 +53,7 @@ jobs:
 
   build-macos:
     name: Build macOS Binary
+    needs: [version-check]
     runs-on: macos-latest
     steps:
       - name: Checkout code
@@ -52,6 +76,7 @@ jobs:
 
   build-windows:
     name: Build Windows Binary
+    needs: [version-check]
     runs-on: windows-latest
     steps:
       - name: Checkout code
