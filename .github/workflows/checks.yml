@@ -24,7 +24,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install capnproto
-        run: sudo apt-get update -qq && sudo apt-get install -y capnproto
+        run: sudo apt-get update -qq && sudo apt-get install -y capnproto libcapnp-dev
 
       - name: Run cargo fmt
         run: cargo fmt --all -- --check
